@@ -1,0 +1,36 @@
+Day,Time,SY_DIV_A,SY_DIV_B,SY_DIV_C
+Mon,09:00 - 10:00,🔬 DS_LAB/Dr. Kumar/B1/Lab-101,🔬 DS_LAB/Dr. Sharma/B1/Lab-102,🔬 DS_LAB/Dr. Patel/B1/Lab-103
+Mon,10:00 - 11:00,🔬 DS_LAB/Dr. Kumar/B2/Lab-101,🔬 DS_LAB/Dr. Sharma/B2/Lab-102,🔬 DS_LAB/Dr. Patel/B2/Lab-103
+Mon,11:00 - 12:00,📘 DBMS\nDr. Gupta\nCR-01,📘 DBMS\nDr. Gupta\nCR-01,📘 DBMS\nDr. Gupta\nCR-01
+Mon,13:00 - 14:00,📘 OS\nDr. Mehta\nCR-02,📘 OS\nDr. Mehta\nCR-02,📘 OS\nDr. Mehta\nCR-02
+Mon,14:00 - 15:00,📗 MINOR_IoT [MINOR]\nDr. Iyer\nCR-03,📗 MINOR_IoT [MINOR]\nDr. Iyer\nCR-03,📗 MINOR_IoT [MINOR]\nDr. Iyer\nCR-03
+Mon,15:00 - 16:00,📘 DBMS\nDr. Gupta\nCR-01,📘 DBMS\nDr. Gupta\nCR-01,📘 DBMS\nDr. Gupta\nCR-01
+Mon,16:00 - 17:00,🔬 ALGO_LAB/Dr. Rao/B1/Lab-101,🔬 ALGO_LAB/Dr. Singh/B1/Lab-102,🔬 ALGO_LAB/Dr. Verma/B1/Lab-103
+Tue,09:00 - 10:00,🔬 DS_LAB/Dr. Kumar/B3/Lab-101,🔬 DS_LAB/Dr. Sharma/B3/Lab-102,🔬 DS_LAB/Dr. Patel/B3/Lab-103
+Tue,10:00 - 11:00,📘 OS\nDr. Mehta\nCR-02,📘 OS\nDr. Mehta\nCR-02,📘 OS\nDr. Mehta\nCR-02
+Tue,11:00 - 12:00,📘 ALGO\nDr. Rao\nCR-01,📘 ALGO\nDr. Rao\nCR-01,📘 ALGO\nDr. Rao\nCR-01
+Tue,13:00 - 14:00,🔬 ALGO_LAB/Dr. Rao/B2/Lab-101,🔬 ALGO_LAB/Dr. Singh/B2/Lab-102,🔬 ALGO_LAB/Dr. Verma/B2/Lab-103
+Tue,14:00 - 15:00,📗 MINOR_Blockchain [MINOR]\nDr. Nair\nCR-03,📗 MINOR_Blockchain [MINOR]\nDr. Nair\nCR-03,📗 MINOR_Blockchain [MINOR]\nDr. Nair\nCR-03
+Tue,15:00 - 16:00,📘 ALGO\nDr. Rao\nCR-01,📘 ALGO\nDr. Rao\nCR-01,📘 ALGO\nDr. Rao\nCR-01
+Tue,16:00 - 17:00,📘 DBMS\nDr. Gupta\nCR-01,📘 DBMS\nDr. Gupta\nCR-01,📘 DBMS\nDr. Gupta\nCR-01
+Wed,09:00 - 10:00,🔬 DS_LAB/Dr. Kumar/B4/Lab-101,🔬 DS_LAB/Dr. Sharma/B4/Lab-102,🔬 DS_LAB/Dr. Patel/B4/Lab-103
+Wed,10:00 - 11:00,🔬 ALGO_LAB/Dr. Rao/B3/Lab-101,🔬 ALGO_LAB/Dr. Singh/B3/Lab-102,🔬 ALGO_LAB/Dr. Verma/B3/Lab-103
+Wed,11:00 - 12:00,📘 OS\nDr. Mehta\nCR-02,📘 OS\nDr. Mehta\nCR-02,📘 OS\nDr. Mehta\nCR-02
+Wed,13:00 - 14:00,📗 MINOR_IoT [MINOR]\nDr. Iyer\nCR-03,📗 MINOR_IoT [MINOR]\nDr. Iyer\nCR-03,📗 MINOR_IoT [MINOR]\nDr. Iyer\nCR-03
+Wed,14:00 - 15:00,🔬 DS_LAB/Dr. Kumar/B1/Lab-101,🔬 DS_LAB/Dr. Sharma/B1/Lab-102,🔬 DS_LAB/Dr. Patel/B1/Lab-103
+Wed,15:00 - 16:00,📘 ALGO\nDr. Rao\nCR-01,📘 ALGO\nDr. Rao\nCR-01,📘 ALGO\nDr. Rao\nCR-01
+Wed,16:00 - 17:00,📘 DBMS\nDr. Gupta\nCR-01,📘 DBMS\nDr. Gupta\nCR-01,📘 DBMS\nDr. Gupta\nCR-01
+Thu,09:00 - 10:00,📘 OS\nDr. Mehta\nCR-02,📘 OS\nDr. Mehta\nCR-02,📘 OS\nDr. Mehta\nCR-02
+Thu,10:00 - 11:00,🔬 DS_LAB/Dr. Kumar/B2/Lab-101,🔬 DS_LAB/Dr. Sharma/B2/Lab-102,🔬 DS_LAB/Dr. Patel/B2/Lab-103
+Thu,11:00 - 12:00,📗 MINOR_Blockchain [MINOR]\nDr. Nair\nCR-03,📗 MINOR_Blockchain [MINOR]\nDr. Nair\nCR-03,📗 MINOR_Blockchain [MINOR]\nDr. Nair\nCR-03
+Thu,13:00 - 14:00,📘 DBMS\nDr. Gupta\nCR-01,📘 DBMS\nDr. Gupta\nCR-01,📘 DBMS\nDr. Gupta\nCR-01
+Thu,14:00 - 15:00,🔬 ALGO_LAB/Dr. Rao/B4/Lab-101,🔬 ALGO_LAB/Dr. Singh/B4/Lab-102,🔬 ALGO_LAB/Dr. Verma/B4/Lab-103
+Thu,15:00 - 16:00,📘 ALGO\nDr. Rao\nCR-01,📘 ALGO\nDr. Rao\nCR-01,📘 ALGO\nDr. Rao\nCR-01
+Thu,16:00 - 17:00,📘 OS\nDr. Mehta\nCR-02,📘 OS\nDr. Mehta\nCR-02,📘 OS\nDr. Mehta\nCR-02
+Fri,09:00 - 10:00,📗 MINOR_IoT [MINOR]\nDr. Iyer\nCR-03,📗 MINOR_IoT [MINOR]\nDr. Iyer\nCR-03,📗 MINOR_IoT [MINOR]\nDr. Iyer\nCR-03
+Fri,10:00 - 11:00,🔬 ALGO_LAB/Dr. Rao/B1/Lab-101,🔬 ALGO_LAB/Dr. Singh/B1/Lab-102,🔬 ALGO_LAB/Dr. Verma/B1/Lab-103
+Fri,11:00 - 12:00,📘 DBMS\nDr. Gupta\nCR-01,📘 DBMS\nDr. Gupta\nCR-01,📘 DBMS\nDr. Gupta\nCR-01
+Fri,13:00 - 14:00,🔬 DS_LAB/Dr. Kumar/B3/Lab-101,🔬 DS_LAB/Dr. Sharma/B3/Lab-102,🔬 DS_LAB/Dr. Patel/B3/Lab-103
+Fri,14:00 - 15:00,📘 OS\nDr. Mehta\nCR-02,📘 OS\nDr. Mehta\nCR-02,📘 OS\nDr. Mehta\nCR-02
+Fri,15:00 - 16:00,📗 MINOR_Blockchain [MINOR]\nDr. Nair\nCR-03,📗 MINOR_Blockchain [MINOR]\nDr. Nair\nCR-03,📗 MINOR_Blockchain [MINOR]\nDr. Nair\nCR-03
+Fri,16:00 - 17:00,🔬 ALGO_LAB/Dr. Rao/B2/Lab-101,🔬 ALGO_LAB/Dr. Singh/B2/Lab-102,🔬 ALGO_LAB/Dr. Verma/B2/Lab-103
