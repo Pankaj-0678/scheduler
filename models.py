@@ -92,7 +92,7 @@ class ClassEvent:
 
     def __init__(self, course: Course, instructor: Instructor, room: Room,
                  meeting_time: MeetingTime, section: DepartmentSection,
-                 batch: str = "ALL"):
+                 batch: str = "ALL", sync_group_id: str = None):
         ClassEvent._counter += 1
         self.id = f"CE{ClassEvent._counter}"
         self.course = course
@@ -101,6 +101,7 @@ class ClassEvent:
         self.meeting_time = meeting_time
         self.section = section
         self.batch = batch   # "ALL" for lectures/minors, or "B1", "B2", ... for lab batches
+        self.sync_group_id = sync_group_id # Binds parallel rotation labs together
 
     def get_affected_section_ids(self) -> Set[str]:
         """Return set of section IDs that are busy during this class."""
@@ -128,37 +129,49 @@ class Schedule:
     def _build_initial_classes(self):
         """
         Create one ClassEvent for each required teaching slot.
-        
-        CRITICAL FIX: For lab courses, classes_per_week is the TOTAL number
-        of lab sessions needed across ALL batches (as imported from CSV).
-        We distribute these sessions evenly among the batches.
+        CRITICAL FIX: Labs are generated as a 'Rotation Matrix'. If a section
+        has 4 batches and 4 lab subjects, they are bound together into 4 time slots
+        using a sync_group_id.
         """
         self.classes = []
         for section in self.data.sections:
             courses = self.data.section_courses.get(section.id, [])
+            
+            # 1. Process Lectures and Minors
             for course in courses:
                 if course.course_type in ("Lecture", "Minor"):
-                    # One event per required session per week
                     for _ in range(course.classes_per_week):
                         ev = self._random_class_event(course, section, "ALL")
                         self.classes.append(ev)
-                else:  # Lab
-                    total_sessions = course.classes_per_week
-                    batches = section.batches
-                    if not batches:
-                        continue
-                    # Distribute sessions evenly among batches
-                    sessions_per_batch = total_sessions // len(batches)
-                    remainder = total_sessions % len(batches)
-                    for idx, batch in enumerate(batches):
-                        num = sessions_per_batch + (1 if idx < remainder else 0)
-                        for _ in range(num):
-                            ev = self._random_class_event(course, section, batch)
-                            self.classes.append(ev)
+            
+            # 2. Process Labs (Parallel Rotation Matrix)
+            lab_courses = [c for c in courses if c.course_type == "Lab"]
+            if lab_courses and section.batches:
+                # Calculate required slots based on the maximum dimension
+                num_slots = max(len(section.batches), len(lab_courses))
+                
+                # Each slot gets a unique sync ID so the GA moves them as a single block
+                for slot_idx in range(num_slots):
+                    sync_id = f"SYNC_{section.id}_SLOT_{slot_idx}"
+                    shared_time = random.choice(self.data.meeting_times)
+                    
+                    # Ensure different rooms for parallel labs
+                    available_lab_rooms = list(self.data.lab_rooms)
+                    random.shuffle(available_lab_rooms)
+                    
+                    for b_idx, batch in enumerate(section.batches):
+                        # Round-robin subject assignment for rotation
+                        c_idx = (b_idx + slot_idx) % len(lab_courses)
+                        course = lab_courses[c_idx]
+                        
+                        room = available_lab_rooms.pop() if available_lab_rooms else random.choice(self.data.lab_rooms or self.data.rooms)
+                        instructor = random.choice(course.instructors)
+                        
+                        ev = ClassEvent(course, instructor, room, shared_time, section, batch, sync_group_id=sync_id)
+                        self.classes.append(ev)
 
     def _random_class_event(self, course: Course, section: DepartmentSection, batch: str) -> ClassEvent:
-        """Create a random ClassEvent (used only for initialisation)."""
-        # Defensive checks to avoid infinite loops
+        """Create a random ClassEvent for non-synced classes."""
         if not self.data.meeting_times:
             raise ValueError(f"No meeting times defined – cannot schedule {course.name}")
         if not course.instructors:
@@ -166,17 +179,9 @@ class Schedule:
         
         meeting_time = random.choice(self.data.meeting_times)
         instructor = random.choice(course.instructors)
-        
-        if course.course_type == "Lab":
-            room_pool = self.data.lab_rooms
-        else:
-            room_pool = self.data.lecture_rooms
-        
-        # Fallback to any room if specific type missing (should not happen if data is valid)
+        room_pool = self.data.lab_rooms if course.course_type == "Lab" else self.data.lecture_rooms
         if not room_pool:
             room_pool = self.data.rooms
-        if not room_pool:
-            raise ValueError(f"No rooms available for course {course.name}")
         
         room = random.choice(room_pool)
         return ClassEvent(course, instructor, room, meeting_time, section, batch)
