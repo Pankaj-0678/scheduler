@@ -2,6 +2,7 @@
 import io
 import math
 import random
+import pickle
 import streamlit as st
 import pandas as pd
  
@@ -98,7 +99,6 @@ def _load_demo_data():
     ]
     
     ins_names = ["VS", "SM", "MA", "PPJ", "GW", "TP", "DB", "SS", "PD", "PB", "GD", "AS", "VD"]
-    # Provide alternating morning preferences for demo testing
     st.session_state.instructors = [Instructor(f"T{i}", name, prefers_morning=(i%2==0), max_lecture_hours=12, max_lab_hours=12) for i, name in enumerate(ins_names)]
     ins_dict = {i.name: i for i in st.session_state.instructors}
     
@@ -146,6 +146,51 @@ def _load_demo_data():
     st.success("✅ Real University Demo Data Loaded! (SY-Div A & SY-Div B)")
  
 # ── Sidebar ────────────────────────────────────────────────────────────────────
+
+# 💾 NEW WORKSPACE SAVE/LOAD LOGIC
+st.sidebar.header("💾 Workspace")
+st.sidebar.markdown("Save or load your college data.")
+
+# Create the data dictionary we want to save
+workspace_data = {
+    "rooms": st.session_state.rooms,
+    "instructors": st.session_state.instructors,
+    "courses": st.session_state.courses,
+    "sections": st.session_state.sections,
+    "section_courses": st.session_state.section_courses,
+    "best_schedule": st.session_state.best_schedule
+}
+
+# Serialize (Pickle) the data to create a download payload
+pickled_data = pickle.dumps(workspace_data)
+
+st.sidebar.download_button(
+    label="⬇️ Download Workspace",
+    data=pickled_data,
+    file_name="college_timetable_save.pkl",
+    mime="application/octet-stream",
+    help="Downloads a file containing all your teachers, rooms, and generated timetables."
+)
+
+st.sidebar.markdown("---")
+st.sidebar.markdown("**Restore Workspace**")
+uploaded_workspace = st.sidebar.file_uploader("Upload .pkl file", type=["pkl"], label_visibility="collapsed")
+if uploaded_workspace is not None:
+    if st.sidebar.button("🔄 Restore Data"):
+        try:
+            loaded_data = pickle.loads(uploaded_workspace.getvalue())
+            st.session_state.rooms = loaded_data.get("rooms", [])
+            st.session_state.instructors = loaded_data.get("instructors", [])
+            st.session_state.courses = loaded_data.get("courses", [])
+            st.session_state.sections = loaded_data.get("sections", [])
+            st.session_state.section_courses = loaded_data.get("section_courses", {})
+            st.session_state.best_schedule = loaded_data.get("best_schedule", None)
+            st.sidebar.success("✅ Workspace Restored!")
+            st.rerun()
+        except Exception as e:
+            st.sidebar.error("Failed to load workspace file.")
+
+st.sidebar.markdown("---")
 st.sidebar.header("⏰ College Timings")
 start_hour  = st.sidebar.slider("Start hour (24h)", 8, 10, 8)
 end_hour    = st.sidebar.slider("End hour (24h)", 14, 20, 17)
@@ -568,7 +613,6 @@ with tab_generate:
             for gen in range(int(generations)):
                 population = ga.evolve(population)
                 best_schedule = population[0]
-                # Log score visually
                 progress_bar.progress((gen + 1) / int(generations), text=f"Gen {gen+1} | fitness={best_schedule.fitness:.4f} | conflicts={best_schedule.hard_conflicts}")
             
             st.session_state.best_schedule = best_schedule
