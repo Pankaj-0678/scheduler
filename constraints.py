@@ -2,29 +2,31 @@ from __future__ import annotations
 from collections import defaultdict
 
 def penalty_morning_preference(schedule) -> float:
-    return sum(1 for c in schedule.classes if c.instructor.prefers_morning and not c.meeting_time.is_morning)
+    return sum(1 for c in schedule.classes if c.instructor and c.instructor.prefers_morning and not c.time_slots[0].is_morning)
 
 def penalty_late_classes(schedule) -> float:
-    return sum(1 for c in schedule.classes if c.meeting_time.is_late)
+    return sum(1 for c in schedule.classes if c.time_slots[0].is_late)
 
 def penalty_instructor_overload(schedule) -> float:
     instructor_day_counts = defaultdict(int)
     for c in schedule.classes:
-        instructor_day_counts[f"{c.instructor.id}_{c.meeting_time.day}"] += 1
+        if c.instructor:
+            instructor_day_counts[f"{c.instructor.id}_{c.time_slots[0].day}"] += len(c.time_slots)
     return sum((count - 3) * 2 for count in instructor_day_counts.values() if count > 3)
 
 def penalty_smart_breaks(schedule) -> float:
     lunch_hour = schedule.data.lunch_hour
     penalties = 0.0
     section_day = defaultdict(list)
-    for c in schedule.classes: section_day[f"{c.section.id}_{c.meeting_time.day}"].append(c)
+    for c in schedule.classes: 
+        section_day[f"{c.section.id}_{c.time_slots[0].day}"].extend(c.time_slots)
 
-    for classes in section_day.values():
-        if len(classes) < 2: continue
-        classes.sort(key=lambda x: x.meeting_time.hour)
+    for time_slots in section_day.values():
+        if len(time_slots) < 2: continue
+        time_slots.sort(key=lambda x: x.hour)
         consecutive = 1
-        for i in range(1, len(classes)):
-            cur_hr, prv_hr = classes[i].meeting_time.hour, classes[i - 1].meeting_time.hour
+        for i in range(1, len(time_slots)):
+            cur_hr, prv_hr = time_slots[i].hour, time_slots[i - 1].hour
             consecutive = consecutive + 1 if cur_hr == prv_hr + 1 else 1
             limit = 2 if cur_hr < lunch_hour else 3
             if consecutive > limit: penalties += 1.5
@@ -33,7 +35,10 @@ def penalty_smart_breaks(schedule) -> float:
 def penalty_instructor_gaps(schedule) -> float:
     penalties = 0.0
     instructor_day = defaultdict(list)
-    for c in schedule.classes: instructor_day[f"{c.instructor.id}_{c.meeting_time.day}"].append(c.meeting_time.hour)
+    for c in schedule.classes: 
+        if c.instructor:
+            for mt in c.time_slots:
+                instructor_day[f"{c.instructor.id}_{mt.day}"].append(mt.hour)
     for hours in instructor_day.values():
         if len(hours) < 2: continue
         hours.sort()
@@ -45,7 +50,10 @@ def penalty_instructor_gaps(schedule) -> float:
 def penalty_section_gaps(schedule) -> float:
     penalties = 0.0
     section_day = defaultdict(list)
-    for c in schedule.classes: section_day[f"{c.section.id}_{c.meeting_time.day}"].append(c.meeting_time.hour)
+    for c in schedule.classes: 
+        for mt in c.time_slots:
+            section_day[f"{c.section.id}_{mt.day}"].append(mt.hour)
+            
     for hours_raw in section_day.values():
         hours = sorted(set(hours_raw))
         for i in range(1, len(hours)):
@@ -57,14 +65,14 @@ def penalty_minor_course_spread(schedule) -> float:
     penalties = 0.0
     section_day_load = defaultdict(int)
     for c in schedule.classes:
-        if c.course.course_type != "Minor":
-            section_day_load[f"{c.section.id}_{c.meeting_time.day}"] += 1
+        if not c.course.course_type.startswith("Minor"):
+            section_day_load[f"{c.section.id}_{c.time_slots[0].day}"] += len(c.time_slots)
+            
     for c in schedule.classes:
-        if c.course.course_type != "Minor": continue
-        day = c.meeting_time.day
-        for sec_id in c.get_affected_section_ids():
-            load = section_day_load.get(f"{sec_id}_{day}", 0)
-            if load >= 5: penalties += (load - 4) * 0.5
+        if not c.course.course_type.startswith("Minor"): continue
+        day = c.time_slots[0].day
+        load = section_day_load.get(f"{c.section.id}_{day}", 0)
+        if load >= 5: penalties += (load - 4) * 0.5
     return penalties
 
 def penalty_lab_lecture_same_day(schedule) -> float:
@@ -72,10 +80,10 @@ def penalty_lab_lecture_same_day(schedule) -> float:
     lecture_day = defaultdict(set)
     for c in schedule.classes:
         if c.course.course_type in ("Lecture", "Minor") and c.batch == "ALL":
-            lecture_day[f"{c.section.id}_{c.meeting_time.day}"].add(c.course.id)
+            lecture_day[f"{c.section.id}_{c.time_slots[0].day}"].add(c.course.id)
     for c in schedule.classes:
         if c.course.course_type == "Lab":
-            if c.course.id in lecture_day.get(f"{c.section.id}_{c.meeting_time.day}", set()):
+            if c.course.id in lecture_day.get(f"{c.section.id}_{c.time_slots[0].day}", set()):
                 penalties += 1.0
     return penalties
 

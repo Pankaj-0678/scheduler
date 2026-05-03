@@ -30,22 +30,21 @@ class FeasibilityChecker:
             self._add("ERROR", "No time slots available. Check college timing settings.")
             return
 
+        if self.data.lab_rooms and not self.data.valid_lab_times:
+             self._add("ERROR", f"Lab duration is {self.data.lab_duration} hours, but no contiguous blocks of this length exist without hitting lunch/end of day.")
+
         for section in self.data.sections:
             courses = self.data.section_courses.get(section.id, [])
-            
-            lec_events = sum(c.classes_per_week for c in courses if c.course_type in ("Lecture", "Minor"))
+            lec_events = sum(c.classes_per_week for c in courses if c.course_type in ("Lecture", "Minor", "Minor Lab"))
             lab_courses = [c for c in courses if c.course_type == "Lab"]
             
-            # Labs run in a parallel matrix based on max(batches, subjects)
-            lab_slots_required = max(len(section.batches), len(lab_courses)) if lab_courses else 0
+            total_lab_sessions = sum(c.classes_per_week for c in lab_courses)
+            lab_slots_required = max(len(section.batches), total_lab_sessions) * self.data.lab_duration if lab_courses else 0
             
             total_events = lec_events + lab_slots_required
 
-            utilization = total_events / total_slots
             if total_events > total_slots:
-                self._add("ERROR", f"Division '{section.name}' needs {total_events} classes/week but only {total_slots} slots exist.")
-            elif utilization > 0.85:
-                self._add("WARNING", f"Division '{section.name}' uses {utilization:.0%} of available slots.")
+                self._add("ERROR", f"Division '{section.name}' needs {total_events} time slots/week but only {total_slots} exist.")
 
     def _check_room_sufficiency(self):
         n_sections = len(self.data.sections)
@@ -56,9 +55,13 @@ class FeasibilityChecker:
             self._add("WARNING", f"Only {n_lecture} lecture room(s) for {n_sections} division(s).")
 
         if self.data.lab_rooms:
-            max_batches = max((len(s.batches) for s in self.data.sections if any(c.course_type == "Lab" for c in self.data.section_courses.get(s.id, []))), default=0)
-            if max_batches > 0 and n_lab < max_batches:
-                self._add("ERROR", f"A section has {max_batches} lab batches but only {n_lab} lab room(s).")
+            max_parallel_labs = 0
+            for s in self.data.sections:
+                lab_courses = [c for c in self.data.section_courses.get(s.id, []) if c.course_type == "Lab"]
+                if len(lab_courses) > max_parallel_labs:
+                    max_parallel_labs = len(lab_courses)
+            if max_parallel_labs > 0 and n_lab < max_parallel_labs:
+                self._add("ERROR", f"A section runs {max_parallel_labs} labs in parallel but only {n_lab} lab room(s).")
 
     def _check_lab_batch_room_ratio(self):
         n_lab = len(self.data.lab_rooms)
@@ -74,26 +77,51 @@ class FeasibilityChecker:
         total_slots = len(self.data.meeting_times)
         if total_slots == 0: return
 
-        instr_assignments = defaultdict(list)
+        instr_expected_lec_load = defaultdict(float)
+        instr_expected_lab_load = defaultdict(float)
+
         for section in self.data.sections:
-            for course in self.data.section_courses.get(section.id, []):
+            courses = self.data.section_courses.get(section.id, [])
+            for course in courses:
                 if not course.instructors: continue
-                # Labs now only count as 1 slot per week against an instructor's capacity if rotation is active
-                events = course.classes_per_week 
+                
+                if course.course_type in ("Lecture", "Minor"):
+                    events = course.classes_per_week
+                    for instr in course.instructors:
+                        instr_expected_lec_load[instr.id] += events / len(course.instructors)
+                        
+                elif course.course_type == "Lab":
+                    events = course.classes_per_week * len(section.batches) * self.data.lab_duration
+                    for instr in course.instructors:
+                        instr_expected_lab_load[instr.id] += events / len(course.instructors)
+
+        for course in self.data.courses:
+            if not course.instructors: continue
+            if course.course_type == "Minor":
+                events = course.classes_per_week
                 for instr in course.instructors:
-                    instr_assignments[instr.id].append((course.name, section.name, events, len(course.instructors)))
+                    instr_expected_lec_load[instr.id] += events / len(course.instructors)
+            elif course.course_type == "Minor Lab":
+                # PATCH: Safely count all minor batches across all divisions
+                total_minor_batches = sum(len(batches) for batches in course.minor_batches.values())
+                events = course.classes_per_week * total_minor_batches * self.data.lab_duration
+                for instr in course.instructors:
+                    instr_expected_lab_load[instr.id] += events / len(course.instructors)
 
         for instr in self.data.instructors:
-            assignments = instr_assignments.get(instr.id, [])
-            if not assignments: continue
-            max_load = sum(ev for _, _, ev, _ in assignments)
-            if max_load > total_slots:
-                self._add("WARNING", f"Instructor '{instr.name}' could be assigned up to {max_load} events/week. Only {total_slots} exist.")
+            expected_lec = instr_expected_lec_load.get(instr.id, 0)
+            expected_lab = instr_expected_lab_load.get(instr.id, 0)
+            
+            if expected_lec > instr.max_lecture_hours:
+                self._add("ERROR", f"Instructor '{instr.name}' is mathematically expected to take {expected_lec:.1f} Lecture hours/week, which exceeds their {instr.max_lecture_hours} hr limit.")
+            if expected_lab > instr.max_lab_hours:
+                self._add("ERROR", f"Instructor '{instr.name}' is mathematically expected to take {expected_lab:.1f} Lab hours/week, which exceeds their {instr.max_lab_hours} hr limit.")
+
 
     def _check_minor_course_refs(self):
         for section in self.data.sections:
             for course in self.data.section_courses.get(section.id, []):
-                if course.course_type != "Minor": continue
+                if not course.course_type.startswith("Minor"): continue
                 bad_refs = [sid for sid in course.enrolled_sections if self.data.get_section(sid) is None]
                 if bad_refs: self._add("ERROR", f"Minor course references unknown section ID(s).")
 
@@ -104,9 +132,11 @@ class FeasibilityChecker:
 
         for section in self.data.sections:
             courses = self.data.section_courses.get(section.id, [])
-            lec_events = sum(c.classes_per_week for c in courses if c.course_type in ("Lecture", "Minor"))
+            lec_events = sum(c.classes_per_week for c in courses if c.course_type in ("Lecture", "Minor", "Minor Lab"))
             lab_courses = [c for c in courses if c.course_type == "Lab"]
-            lab_slots_required = max(len(section.batches), len(lab_courses)) if lab_courses else 0
+            
+            total_lab_sessions = sum(c.classes_per_week for c in lab_courses)
+            lab_slots_required = max(len(section.batches), total_lab_sessions) * self.data.lab_duration if lab_courses else 0
             
             avg_per_day = (lec_events + lab_slots_required) / 5
             if avg_per_day > slots_per_day:

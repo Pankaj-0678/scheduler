@@ -1,6 +1,5 @@
 """Master Timetable Generator — Streamlit App"""
 import io
-import math
 import random
 import streamlit as st
 import pandas as pd
@@ -60,15 +59,13 @@ def _schedule_to_df(schedule):
         else:
             text = f"🔬 {c.course.name}\n{c.instructor.name}\n{c.batch}\n{c.room.id}"
             
-        for mt in c.time_slots:
-            rows.append({
-                "Division": c.section.name,
-                "Day": mt.day,
-                "Time": mt.time_str,
-                "Event": text,
-                "_sort": day_order[mt.day],
-            })
-            
+        rows.append({
+            "Division": c.section.name,
+            "Day": c.meeting_time.day,
+            "Time": c.meeting_time.time_str,
+            "Event": text,
+            "_sort": day_order[c.meeting_time.day],
+        })
     df = pd.DataFrame(rows)
     if df.empty: return df
     
@@ -89,61 +86,37 @@ def _run_feasibility(data):
 
 def _load_demo_data():
     _reset_data()
-    
     st.session_state.rooms = [
-        Room("Lec1", 60, "Lecture"), Room("Lec2", 60, "Lecture"), Room("CR 01", 60, "Lecture"), Room("CR 02", 60, "Lecture"),
-        Room("Seminar_Hall", 120, "Lecture"),
-        Room("Lab1", 30, "Lab"), Room("Lab2", 30, "Lab"), Room("Lab3", 30, "Lab"), Room("Lab4", 30, "Lab"),
-        Room("205A", 30, "Lab"), Room("207", 30, "Lab"), Room("401A", 30, "Lab"), Room("402A", 30, "Lab")
+        Room("Lec1", 60, "Lecture"), Room("Lec2", 60, "Lecture"),
+        Room("Lab1", 30, "Lab"), Room("Lab2", 30, "Lab"), 
+        Room("Lab3", 30, "Lab"), Room("Lab4", 30, "Lab")
     ]
+    st.session_state.instructors = [Instructor(f"T{i}", f"Prof_{i}", max_hours=40) for i in range(1, 10)]
     
-    ins_names = ["VS", "SM", "MA", "PPJ", "GW", "TP", "DB", "SS", "PD", "PB", "GD", "AS", "VD"]
-    # Provide alternating morning preferences for demo testing
-    st.session_state.instructors = [Instructor(f"T{i}", name, prefers_morning=(i%2==0), max_lecture_hours=12, max_lab_hours=12) for i, name in enumerate(ins_names)]
-    ins_dict = {i.name: i for i in st.session_state.instructors}
+    c_ai = Course("C1", "AI Theory", 60, [st.session_state.instructors[0]], 3, "Lecture")
+    c_ml = Course("C2", "ML Theory", 60, [st.session_state.instructors[1]], 3, "Lecture")
     
-    c_os_lec = Course("C_OS", "Operating Systems", 60, [ins_dict["VS"], ins_dict["MA"]], 3, "Lecture")
-    c_dbms_lec = Course("C_DBMS", "DBMS", 60, [ins_dict["SS"], ins_dict["PPJ"]], 3, "Lecture")
-    c_mds_lec = Course("C_MDS", "MDS", 60, [ins_dict["GD"], ins_dict["VD"]], 3, "Lecture")
-    c_ai_lec = Course("C_AI", "AI-AE", 60, [ins_dict["PD"]], 3, "Lecture")
+    m_iot = Course("M1", "IoT Minor", 60, [st.session_state.instructors[2]], 2, "Minor")
+    m_iot_lab = Course("M1_L", "IoT Minor Lab", 30, [st.session_state.instructors[2]], 1, "Minor Lab")
+    m_cloud = Course("M2", "Cloud Minor", 60, [st.session_state.instructors[3]], 2, "Minor")
+    m_cloud_lab = Course("M2_L", "Cloud Minor Lab", 30, [st.session_state.instructors[3]], 1, "Minor Lab")
     
-    l_os = Course("L_OS", "OS Lab", 30, [ins_dict["VS"], ins_dict["MA"]], 1, "Lab")
-    l_sbl = Course("L_SBL", "SBL-V Lab", 30, [ins_dict["MA"], ins_dict["PB"]], 1, "Lab")
-    l_pbl = Course("L_PBL", "PBL MINI", 30, [ins_dict["PPJ"], ins_dict["GW"]], 1, "Lab")
-    l_dbms = Course("L_DBMS", "DBMS Lab", 30, [ins_dict["SS"], ins_dict["PPJ"]], 1, "Lab")
+    l_ai = Course("L1", "AI Lab", 30, [st.session_state.instructors[4]], 1, "Lab")
+    l_ml = Course("L2", "ML Lab", 30, [st.session_state.instructors[5]], 1, "Lab")
+    l_dl = Course("L3", "DL Lab", 30, [st.session_state.instructors[6]], 1, "Lab")
+    l_wd = Course("L4", "Web Lab", 30, [st.session_state.instructors[7]], 1, "Lab")
     
-    m_iot = Course("M_IOT", "MINOR IOT&CC", 60, [ins_dict["SM"], ins_dict["AS"]], 2, "Minor")
-    c_bm_lec = Course("C_BM", "Biomedical", 60, [ins_dict["TP"]], 2, "Minor")
-    ml_iot = Course("ML_IOT", "IoT Minor Lab", 30, [ins_dict["SM"], ins_dict["AS"]], 1, "Minor Lab")
-    ml_bm = Course("ML_BM", "BioMedical Minor Lab", 30, [ins_dict["TP"]], 1, "Minor Lab")
+    st.session_state.courses = [c_ai, c_ml, m_iot, m_iot_lab, m_cloud, m_cloud_lab, l_ai, l_ml, l_dl, l_wd]
+    sec = DepartmentSection("S1", "Div-A", 60, 4)
+    st.session_state.sections = [sec]
+    st.session_state.section_courses = {sec.id: st.session_state.courses}
     
-    st.session_state.courses = [c_os_lec, c_dbms_lec, c_mds_lec, c_ai_lec, l_os, l_sbl, l_pbl, l_dbms, m_iot, c_bm_lec, ml_iot, ml_bm]
+    m_iot.minor_batches[sec.id] = ["B1", "B2", "B3"]
+    m_iot_lab.minor_batches[sec.id] = ["B1", "B2", "B3"]
+    m_cloud.minor_batches[sec.id] = ["B4"]
+    m_cloud_lab.minor_batches[sec.id] = ["B4"]
     
-    sec_sy_a = DepartmentSection("SY_A", "SY-Div A", 60, 4)
-    sec_sy_b = DepartmentSection("SY_B", "SY-Div B", 60, 4)
-    st.session_state.sections = [sec_sy_a, sec_sy_b]
-    
-    st.session_state.section_courses = {
-        sec_sy_a.id: [c_os_lec, c_dbms_lec, c_mds_lec, c_ai_lec, l_os, l_sbl, l_pbl, l_dbms, m_iot, c_bm_lec, ml_iot, ml_bm],
-        sec_sy_b.id: [c_os_lec, c_dbms_lec, c_mds_lec, c_ai_lec, l_os, l_sbl, l_pbl, l_dbms, m_iot, c_bm_lec, ml_iot, ml_bm]
-    }
-    
-    m_iot.minor_batches[sec_sy_a.id] = ["B1", "B2"]
-    m_iot.minor_batches[sec_sy_b.id] = ["B1", "B2"]
-    ml_iot.minor_batches[sec_sy_a.id] = ["B1", "B2"]
-    ml_iot.minor_batches[sec_sy_b.id] = ["B1", "B2"]
-
-    c_bm_lec.minor_batches[sec_sy_a.id] = ["B3", "B4"]
-    c_bm_lec.minor_batches[sec_sy_b.id] = ["B3", "B4"]
-    ml_bm.minor_batches[sec_sy_a.id] = ["B3", "B4"]
-    ml_bm.minor_batches[sec_sy_b.id] = ["B3", "B4"]
-
-    m_iot.enrolled_sections = [sec_sy_a.id, sec_sy_b.id]
-    c_bm_lec.enrolled_sections = [sec_sy_a.id, sec_sy_b.id]
-    ml_iot.enrolled_sections = [sec_sy_a.id, sec_sy_b.id]
-    ml_bm.enrolled_sections = [sec_sy_a.id, sec_sy_b.id]
-
-    st.success("✅ Real University Demo Data Loaded! (SY-Div A & SY-Div B)")
+    st.success("✅ Demo Data Loaded!")
  
 # ── Sidebar ────────────────────────────────────────────────────────────────────
 st.sidebar.header("⏰ College Timings")
@@ -151,10 +124,6 @@ start_hour  = st.sidebar.slider("Start hour (24h)", 8, 10, 8)
 end_hour    = st.sidebar.slider("End hour (24h)", 14, 20, 17)
 lunch_hour  = st.sidebar.slider("Lunch start hour", 11, 14, 12)
 dynamic_times = _build_meeting_times(start_hour, end_hour, lunch_hour)
-
-st.sidebar.markdown("---")
-st.sidebar.header("🧪 Lab Settings")
-lab_duration = st.sidebar.selectbox("Lab Session Duration (hours)", [1, 2, 3, 4], index=1)
  
 st.sidebar.markdown("---")
 st.sidebar.header("🧬 GA Settings")
@@ -182,7 +151,7 @@ with tab_import:
     col1, col2 = st.columns([2, 1])
     with col1:
         st.subheader("Import from CSV")
-        st.markdown("Supports University Format (Time columns) or Demo Format (Division columns)")
+        st.markdown("Columns: `Day`, `Time`, one column per division.")
         uploaded_files = st.file_uploader("Upload timetable CSV(s)", type=["csv"], accept_multiple_files=True)
         if uploaded_files and st.button("Parse & Load CSV Data"):
             try:
@@ -192,175 +161,72 @@ with tab_import:
                 def _strip_prefix(text: str, prefix: str) -> str:
                     if text.startswith(prefix): return text[len(prefix):]
                     return text
-
-                def _parse_event_string(raw_string: str, has_emojis: bool = False):
-                    if has_emojis:
+     
+                def _parse_cell(cell_text: str, div_name: str):
+                    if not cell_text or cell_text.strip() in {"---", "nan", "NaN", ""}: return
+                    events = cell_text.split("\n\n")
+                    for raw in events:
+                        raw = raw.strip()
+                        if not raw or raw == "---": continue
+     
                         batch = "ALL"
-                        if "🔬" in raw_string:
-                            body = _strip_prefix(raw_string, "🔬 ").strip()
+                        if "🔬" in raw:
+                            body  = _strip_prefix(raw, "🔬 ").strip()
                             parts = body.split("/")
-                            if len(parts) >= 4:
-                                return parts[0].strip(), parts[1].strip(), parts[2].strip(), parts[3].strip(), "Lab"
-                        elif "📗" in raw_string:
-                            body = _strip_prefix(raw_string, "📗 ").strip()
-                            lines = body.split("\n")
-                            if len(lines) >= 3:
-                                return lines[0].replace(" [MINOR]", "").strip(), lines[1].strip(), "MINOR", lines[2].strip(), "Minor"
-                        elif "📘" in raw_string:
-                            body = _strip_prefix(raw_string, "📘 ").strip()
-                            lines = body.split("\n")
-                            if len(lines) >= 3:
-                                return lines[0].strip(), lines[1].strip(), "ALL", lines[2].strip(), "Lecture"
-                            elif len(lines) >= 2:
-                                return lines[0].strip(), lines[1].strip(), "ALL", "R_UNKNOWN", "Lecture"
-                        elif "🧪" in raw_string:
-                            body  = _strip_prefix(raw_string, "🧪 ").strip()
-                            lines = body.split("\n")
-                            if len(lines) >= 3:
-                                return lines[0].replace(" [MINOR LAB]", "").strip(), lines[1].strip(), lines[2].replace("Batch:", "").strip(), lines[3].strip() if len(lines) > 3 else "Unknown", "Minor Lab"
-                        return None, None, None, None, None
-
-                    parts = [p.strip() for p in raw_string.split("/")]
-                    course_type = "Lecture"
-                    batch = "ALL"
-                    c_name, t_name, r_id = "Unknown", "Unknown", "Unknown"
-
-                    if not parts: return None, None, None, None, None
-
-                    if "MINOR" in parts[0].upper():
-                        course_type = "Minor"
-                        c_name = parts[0].replace(" [MINOR]", "").replace(" [MINOR LAB]", "")
-                        if len(parts) >= 3:
-                            t_name = parts[1]
-                            r_id = parts[-1]
-                            batch = parts[2] if len(parts) > 3 else "MINOR"
-                        elif len(parts) == 2:
-                            t_name = parts[1]
-                            batch = "MINOR"
-                    elif len(parts) >= 4:
-                        c_name, t_name, batch, r_id = parts[0], parts[1], parts[2], parts[3]
-                        course_type = "Lab"
-                    elif len(parts) == 3:
-                        c_name, t_name = parts[0], parts[1]
-                        last_part = parts[2].upper()
-                        if len(last_part) <= 2 and last_part[0] in ['S', 'B'] and last_part[-1].isdigit():
-                            batch = parts[2]
+                            if len(parts) < 4: continue
+                            c_name, t_name, batch, r_id = parts[0].strip(), parts[1].strip(), parts[2].strip(), parts[3].strip()
                             course_type = "Lab"
+                        elif "📗" in raw:
+                            body  = _strip_prefix(raw, "📗 ").strip()
+                            lines = body.split("\n")
+                            if len(lines) < 3: continue
+                            c_name = lines[0].replace(" [MINOR]", "").strip()
+                            t_name, r_id = lines[1].strip(), lines[2].strip()
+                            course_type = "Minor"
                         else:
-                            r_id = parts[2]
-                    elif len(parts) == 2:
-                        c_name, t_name = parts[0], parts[1]
-                    else:
-                        c_name = parts[0]
-                        
-                    if "LAB" in c_name.upper() or "PBL" in c_name.upper() or "SBL" in c_name.upper() or batch not in ["ALL", "MINOR"]:
-                        if course_type != "Minor": course_type = "Lab"
-                            
-                    return c_name, t_name, batch, r_id, course_type
+                            body  = _strip_prefix(raw, "📘 ").strip()
+                            lines = body.split("\n")
+                            if len(lines) < 3:
+                                if len(lines) < 2: continue
+                                c_name, t_name, r_id = lines[0].strip(), lines[1].strip(), "R_UNKNOWN"
+                            else:
+                                c_name, t_name, r_id = lines[0].strip(), lines[1].strip(), lines[2].strip()
+                            course_type = "Lecture"
+     
+                        if not c_name or not t_name: continue
+     
+                        if r_id not in rooms_dict:
+                            rooms_dict[r_id] = Room(r_id, 30 if course_type == "Lab" else 60, "Lab" if course_type == "Lab" else "Lecture")
+                        if t_name not in instructors_dict:
+                            instructors_dict[t_name] = Instructor(f"T{len(instructors_dict)+1}", t_name, max_hours=40)
+     
+                        c_key = f"{c_name}_{course_type}"
+                        if c_key not in courses_dict:
+                            courses_dict[c_key] = Course(f"C{len(courses_dict)+1}", c_name, 60 if course_type != "Lab" else 30, [instructors_dict[t_name]], 1, course_type)
+                        else:
+                            if instructors_dict[t_name] not in courses_dict[c_key].instructors:
+                                courses_dict[c_key].instructors.append(instructors_dict[t_name])
+     
+                        if div_name not in sections_dict:
+                            sections_dict[div_name] = DepartmentSection(f"S{len(sections_dict)+1}", div_name, 60, 4)
+                            section_courses_map[sections_dict[div_name].id] = set()
+     
+                        section_courses_map[sections_dict[div_name].id].add(c_key)
+                        course_week_counts.setdefault(div_name, {})
+                        course_week_counts[div_name][c_key] = course_week_counts[div_name].get(c_key, 0) + 1
      
                 for uf in uploaded_files:
                     content = uf.getvalue().decode("utf-8-sig")
                     df_raw = pd.read_csv(io.StringIO(content))
-                    
-                    actual_cols = df_raw.columns.tolist()
-                    div_col = next((c for c in actual_cols if "div" in str(c).lower()), None)
-                    day_col = next((c for c in actual_cols if "day" in str(c).lower()), None)
-                    
-                    has_time_cols = any('-' in str(c) or ':' in str(c) for c in actual_cols)
-                    is_university_format = (div_col is not None) and has_time_cols
-
-                    if is_university_format:
-                        time_cols = [c for c in actual_cols if c not in {div_col, day_col} and "unnamed" not in str(c).lower()]
-                        for _, row in df_raw.iterrows():
-                            div_name = str(row.get(div_col, "")).strip()
-                            if not div_name or str(div_name) == "nan": continue
-                            
-                            for t_col in time_cols:
-                                cell_text = str(row.get(t_col, "")).strip()
-                                if not cell_text or cell_text in {"nan", "NaN", "---", "LUNCH BREAK", "BREAK", "Holiday"}: 
-                                    continue
-                                
-                                courses_in_this_slot = set()
-                                events = cell_text.split("\n")
-                                for raw in events:
-                                    raw = raw.strip()
-                                    if not raw: continue
-                                    
-                                    c_name, t_name, batch, r_id, course_type = _parse_event_string(raw, has_emojis=False)
-                                    if not c_name or c_name == "Unknown": continue
-                                        
-                                    if r_id not in rooms_dict:
-                                        rooms_dict[r_id] = Room(r_id, 30 if course_type == "Lab" else 60, "Lab" if course_type == "Lab" else "Lecture")
-                                    if t_name not in instructors_dict:
-                                        instructors_dict[t_name] = Instructor(f"T{len(instructors_dict)+1}", t_name, max_lecture_hours=12, max_lab_hours=12)
-                                        
-                                    c_key = f"{c_name}_{course_type}"
-                                    if c_key not in courses_dict:
-                                        courses_dict[c_key] = Course(f"C{len(courses_dict)+1}", c_name, 60 if course_type != "Lab" else 30, [instructors_dict[t_name]], 1, course_type)
-                                    else:
-                                        if instructors_dict[t_name] not in courses_dict[c_key].instructors:
-                                            courses_dict[c_key].instructors.append(instructors_dict[t_name])
-                                            
-                                    if div_name not in sections_dict:
-                                        sections_dict[div_name] = DepartmentSection(f"S{len(sections_dict)+1}", div_name, 60, 4)
-                                        section_courses_map[sections_dict[div_name].id] = set()
-                                        
-                                    section_courses_map[sections_dict[div_name].id].add(c_key)
-                                    courses_in_this_slot.add(c_key)
-                                    
-                                course_week_counts.setdefault(div_name, {})
-                                for unique_course in courses_in_this_slot:
-                                    course_week_counts[div_name][unique_course] = course_week_counts[div_name].get(unique_course, 0) + 1
-
-                    else:
-                        div_cols = [c for c in actual_cols if "unnamed" not in str(c).lower() and "day" not in str(c).lower() and "time" not in str(c).lower()]
-                        for col in df_raw.columns: df_raw[col] = df_raw[col].astype(str).str.replace("\r\n", "\n").str.replace("\r", "\n")
-                        
-                        for _, row in df_raw.iterrows():
-                            for div_name in div_cols:
-                                cell_text = str(row.get(div_name, "")).strip()
-                                if not cell_text or cell_text in {"---", "nan", "NaN", ""}: continue
-                                
-                                courses_in_this_slot = set()
-                                events = cell_text.split("\n\n")
-                                for raw in events:
-                                    raw = raw.strip()
-                                    if not raw or raw == "---": continue
-                                    
-                                    c_name, t_name, batch, r_id, course_type = _parse_event_string(raw, has_emojis=("📘" in raw or "🔬" in raw or "📗" in raw or "🧪" in raw))
-                                    if not c_name: continue
-                 
-                                    if r_id not in rooms_dict:
-                                        rooms_dict[r_id] = Room(r_id, 30 if course_type == "Lab" else 60, "Lab" if course_type == "Lab" else "Lecture")
-                                    if t_name not in instructors_dict:
-                                        instructors_dict[t_name] = Instructor(f"T{len(instructors_dict)+1}", t_name, max_lecture_hours=12, max_lab_hours=12)
-                 
-                                    c_key = f"{c_name}_{course_type}"
-                                    if c_key not in courses_dict:
-                                        courses_dict[c_key] = Course(f"C{len(courses_dict)+1}", c_name, 60 if course_type != "Lab" else 30, [instructors_dict[t_name]], 1, course_type)
-                                    else:
-                                        if instructors_dict[t_name] not in courses_dict[c_key].instructors:
-                                            courses_dict[c_key].instructors.append(instructors_dict[t_name])
-                 
-                                    if div_name not in sections_dict:
-                                        sections_dict[div_name] = DepartmentSection(f"S{len(sections_dict)+1}", div_name, 60, 4)
-                                        section_courses_map[sections_dict[div_name].id] = set()
-                 
-                                    section_courses_map[sections_dict[div_name].id].add(c_key)
-                                    courses_in_this_slot.add(c_key)
-                                    
-                                course_week_counts.setdefault(div_name, {})
-                                for unique_course in courses_in_this_slot:
-                                    course_week_counts[div_name][unique_course] = course_week_counts[div_name].get(unique_course, 0) + 1
+                    df_raw.columns = df_raw.columns.str.strip()
+                    div_cols  = [c for c in df_raw.columns if c not in {"Unnamed: 0", "Day", "Time"}]
+                    for col in df_raw.columns: df_raw[col] = df_raw[col].astype(str).str.replace("\r\n", "\n").str.replace("\r", "\n")
+                    for _, row in df_raw.iterrows():
+                        for div in div_cols: _parse_cell(str(row.get(div, "")), div)
      
                 for div, counts in course_week_counts.items():
                     for c_key, cnt in counts.items():
-                        if c_key in courses_dict: 
-                            course = courses_dict[c_key]
-                            actual_cnt = cnt
-                            if "Lab" in course.course_type:
-                                actual_cnt = math.ceil(cnt / lab_duration)
-                            course.classes_per_week = max(course.classes_per_week, actual_cnt)
+                        if c_key in courses_dict: courses_dict[c_key].classes_per_week = max(courses_dict[c_key].classes_per_week, cnt)
      
                 _reset_data()
                 st.session_state.rooms = list(rooms_dict.values())
@@ -373,7 +239,7 @@ with tab_import:
                 st.error(f"Failed to parse CSV: {e}")
 
     with col2:
-        if st.button("🚀 Load Full Department Demo Data"): 
+        if st.button("🚀 Load Rotation Demo Data"): 
             _load_demo_data()
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -407,12 +273,10 @@ with tab_resources:
         st.subheader("👩‍🏫 Teachers")
         with st.form("teacher_form", clear_on_submit=True):
             t_name = st.text_input("Teacher name")
-            t_max_lec = st.number_input("Max Lecture Hours/week", 1, 40, 12)
-            t_max_lab = st.number_input("Max Lab Hours/week", 1, 40, 12)
-            t_morning = st.checkbox("Prefers Morning Classes (Soft Constraint)")
+            t_max_hours = st.number_input("Max hours (classes) per week", 1, 60, 40)
             if st.form_submit_button("➕ Add Teacher") and t_name.strip():
                 st.session_state.instructors.append(
-                    Instructor(f"T{len(st.session_state.instructors)+1}", t_name.strip(), prefers_morning=t_morning, max_lecture_hours=t_max_lec, max_lab_hours=t_max_lab)
+                    Instructor(f"T{len(st.session_state.instructors)+1}", t_name.strip(), max_hours=t_max_hours)
                 )
                 st.rerun()
                 
@@ -420,16 +284,13 @@ with tab_resources:
             if st.session_state.edit_teacher_idx == i:
                 with st.form(f"et_{i}"):
                     en = st.text_input("Name", value=t.name)
-                    eh_lec = st.number_input("Max Lecture Hours", value=t.max_lecture_hours)
-                    eh_lab = st.number_input("Max Lab Hours", value=t.max_lab_hours)
-                    eh_morning = st.checkbox("Prefers Morning Classes", value=t.prefers_morning)
+                    eh = st.number_input("Max hours", value=t.max_hours)
                     if st.form_submit_button("💾 Save"):
-                        t.name = en; t.max_lecture_hours = eh_lec; t.max_lab_hours = eh_lab; t.prefers_morning = eh_morning
+                        t.name = en; t.max_hours = eh
                         st.session_state.edit_teacher_idx = None; st.rerun()
             else:
                 cA, cB, cC = st.columns([5, 1, 1])
-                pref = "🌅 Morning" if t.prefers_morning else "🕒 Any Time"
-                cA.write(f"• **{t.name}** (Lec: {t.max_lecture_hours}h | Lab: {t.max_lab_hours}h | {pref})")
+                cA.write(f"• **{t.name}** (Max: {t.max_hours} hrs/wk)")
                 if cB.button("✏️", key=f"ed_t_{i}"): st.session_state.edit_teacher_idx = i; st.rerun()
                 if cC.button("🗑️", key=f"del_t_{i}"):
                     deleted = st.session_state.instructors.pop(i)
@@ -459,6 +320,7 @@ with tab_courses:
                 ct = st.radio("Type", ["Lecture", "Lab", "Minor", "Minor Lab"], index=["Lecture", "Lab", "Minor", "Minor Lab"].index(c.course_type))
                 cw = st.number_input("Classes/wk", value=c.classes_per_week)
                 
+                # Full editing of assigned teachers for this course
                 all_teacher_names = [t.name for t in st.session_state.instructors]
                 current_teacher_names = [t.name for t in c.instructors if t.name in all_teacher_names]
                 sel_t = st.multiselect("Assigned Teachers", all_teacher_names, default=current_teacher_names)
@@ -535,7 +397,7 @@ with tab_generate:
             st.session_state.rooms, dynamic_times,
             st.session_state.instructors, st.session_state.courses,
             st.session_state.sections, st.session_state.section_courses,
-            lunch_hour, lab_duration
+            lunch_hour,
         )
         results, has_errors = _run_feasibility(data_tmp)
         if has_errors:
@@ -557,19 +419,18 @@ with tab_generate:
                 st.session_state.rooms, dynamic_times,
                 st.session_state.instructors, st.session_state.courses,
                 st.session_state.sections, st.session_state.section_courses,
-                lunch_hour, lab_duration
+                lunch_hour,
             )
             ga = GeneticAlgorithm(data, active_constraints, pop_size=pop_size, mutation_rate=mutation_rate)
             progress_bar = st.progress(0, text="Initialising…")
             
             population = ga.initialize_population()
             best_schedule = None
-            
             for gen in range(int(generations)):
                 population = ga.evolve(population)
                 best_schedule = population[0]
-                # Log score visually
                 progress_bar.progress((gen + 1) / int(generations), text=f"Gen {gen+1} | fitness={best_schedule.fitness:.4f} | conflicts={best_schedule.hard_conflicts}")
+                if best_schedule.hard_conflicts == 0 and gen > 15: break
             
             st.session_state.best_schedule = best_schedule
         except Exception as e:
@@ -578,25 +439,23 @@ with tab_generate:
     best = st.session_state.best_schedule
     if best is not None:
         
+        # Conflict Inspector clearly shows why a schedule failed
         if best.hard_conflicts > 0:
             st.error(f"⚠️ Generated with {best.hard_conflicts} Hard Conflicts! Check the Inspector below.")
             st.subheader("🔴 Conflict Inspector")
-            st.markdown("These classes break hard constraints. The precise reasons are logged below.")
+            st.markdown("These classes share a room, teacher, or batch at the same time, or violate capacity/working hours.")
             conflict_rows = []
             for ev in best.conflicting_classes:
-                reasons = ", ".join(best.conflict_reasons.get(ev, ["Unknown Constraint Broken"]))
-                for mt in ev.time_slots:
-                    conflict_rows.append({
-                        "Division": ev.section.name,
-                        "Course":   ev.course.name,
-                        "Type":     ev.course.course_type,
-                        "Batch":    ev.batch,
-                        "Teacher":  ev.instructor.name if ev.instructor else "NONE",
-                        "Room":     ev.room.id,
-                        "Day":      mt.day,
-                        "Time":     mt.time_str,
-                        "Conflict Reason": reasons
-                    })
+                conflict_rows.append({
+                    "Division": ev.section.name,
+                    "Course":   ev.course.name,
+                    "Type":     ev.course.course_type,
+                    "Batch":    ev.batch,
+                    "Teacher":  ev.instructor.name if ev.instructor else "NONE",
+                    "Room":     ev.room.id,
+                    "Day":      ev.meeting_time.day,
+                    "Time":     ev.meeting_time.time_str,
+                })
             if conflict_rows:
                 st.dataframe(pd.DataFrame(conflict_rows), use_container_width=True)
         else:
@@ -624,13 +483,12 @@ with tab_generate:
                 else:
                     text = f"🔬 {c.course.name} | {c.instructor.name} | {c.batch} | {c.room.id}"
                     
-                for mt in c.time_slots:
-                    div_rows.append({
-                        "Day": mt.day,
-                        "Time": mt.time_str,
-                        "Event": text,
-                        "_sort": day_order[mt.day],
-                    })
+                div_rows.append({
+                    "Day": c.meeting_time.day,
+                    "Time": c.meeting_time.time_str,
+                    "Event": text,
+                    "_sort": day_order[c.meeting_time.day],
+                })
             if div_rows:
                 df_div = pd.DataFrame(div_rows)
                 grouped = df_div.groupby(["_sort", "Day", "Time"])["Event"].apply(lambda x: "\n\n".join(set(x))).reset_index()

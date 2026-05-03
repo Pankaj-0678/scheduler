@@ -1,0 +1,178 @@
+Day,Time,SY A,SY B
+Mon,09:00-10:00,"🔬 MDS TUT / GD / S2 / LAB 207","🔬 MDS TUT / VD / S8 / LAB 205 B"
+Mon,10:00-11:00,"🔬 OS LAB / VS / S1 / 205 A
+
+🔬 SBL-V / MA / S3 / 402A
+
+🔬 PBL MINI / PPJ / S4 / 401 A","🔬 PBL MINI / PD / S5 / 207
+
+🔬 SBL-V / PB / S6 / 402 A
+
+🔬 OS LAB / MA / S7 / 205 A
+
+🔬 DBMS LAB / PPJ / S8 / 401B"
+Mon,11:00-12:00,"🔬 OS LAB / VS / S1 / 205 A
+
+🔬 SBL-V / MA / S3 / 402A
+
+🔬 PBL MINI / PPJ / S4 / 401 A","🔬 PBL MINI / PD / S5 / 207
+
+🔬 SBL-V / PB / S6 / 402 A
+
+🔬 OS LAB / MA / S7 / 205 A
+
+🔬 DBMS LAB / PPJ / S8 / 401B"
+Mon,12:30-13:30,"🔬 SBL-V / MA / S1 / 402 A
+
+🔬 PBL MINI / GW / S2 / 207
+
+🔬 DBMS LAB / PPJ / S3 / 401A
+
+🔬 OS LAB / VS / S4 / 205 A","📘 AI-AE
+PD
+CR 02"
+Mon,13:30-14:30,"🔬 SBL-V / MA / S1 / 402 A
+
+🔬 PBL MINI / GW / S2 / 207
+
+🔬 DBMS LAB / PPJ / S3 / 401A
+
+🔬 OS LAB / VS / S4 / 205 A","📘 MDS
+VD
+CR 02"
+Mon,14:40-15:40,"📘 SBL-VI LANGUAGE
+DB
+01","📘 DBMS
+PPJ
+CR 02"
+Mon,15:40-16:40,---,"📘 DBMS
+PPJ
+CR 02"
+Tue,09:00-10:00,"🔬 MDS TUT / GD / S1 / LAB 207",---
+Tue,10:00-11:00,"🔬 PBL MINI / PPJ / S1 / 402B
+
+🔬 DBMS LAB / SS / S2 / 401A
+
+🔬 OS LAB / VS / S3 / 205 A","🔬 OS LAB / VS / S6 / 205 A
+
+🔬 SBL-V / PB / S7 / 402A
+
+🔬 OS LAB / MA / S8 / 205 B"
+Tue,11:00-12:00,"🔬 PBL MINI / PPJ / S1 / 402B
+
+🔬 DBMS LAB / SS / S2 / 401A
+
+🔬 OS LAB / VS / S3 / 205 A","🔬 OS LAB / VS / S6 / 205 A
+
+🔬 SBL-V / PB / S7 / 402A
+
+🔬 OS LAB / MA / S8 / 205 B"
+Tue,12:30-13:30,---,---
+Tue,13:30-14:30,---,---
+Tue,14:40-15:40,"📘 DBMS
+SS
+CR 01","📘 AI-AE
+PD
+CR 02"
+Tue,15:40-16:40,"📘 DBMS
+SS
+CR 01","📘 AI-AE
+PD
+CR 02"
+Wed,09:00-10:00,---,"🔬 MDS TUT / VD / S5 / 205 B"
+Wed,10:00-11:00,"🔬 DBMS LAB / SS / S1 / 401A
+
+🔬 OS LAB / VS / S2 / 205 B
+
+🔬 SBL-V / PB / S4 / 402A","🔬 OS LAB / MA / S5 / 205 A
+
+🔬 DBMS LAB / PPJ / S6 / 401B
+
+🔬 PBL MINI / DB / S8 / 402 B"
+Wed,11:00-12:00,"🔬 DBMS LAB / SS / S1 / 401A
+
+🔬 OS LAB / VS / S2 / 205 B
+
+🔬 SBL-V / PB / S4 / 402A","🔬 OS LAB / MA / S5 / 205 A
+
+🔬 DBMS LAB / PPJ / S6 / 401B
+
+🔬 PBL MINI / DB / S8 / 402 B"
+Wed,12:30-13:30,"📘 OS
+VS
+CR 01","📘 OS
+MA
+CR 02"
+Wed,13:30-14:30,---,"📘 MDS
+VD
+CR 02"
+Wed,14:40-15:40,"📘 AI-AE
+PD
+CR 01","📘 OS
+MA
+CR 02"
+Wed,15:40-16:40,"📘 AI-AE
+PD
+CR 01","📘 SBL-VI LANGUAGE
+PD
+02"
+Thu,09:00-10:00,"🔬 MDS TUT / GD / S3 / LAB 203","🔬 MDS TUT / VD / S6 / 205B"
+Thu,10:00-11:00,---,"🔬 DBMS LAB / PPJ / S5 / 401A
+
+🔬 PBL MINI / VS / S7 / 205 B
+
+🔬 SBL-V / MA / S8 / 402B"
+Thu,11:00-12:00,---,"🔬 DBMS LAB / PPJ / S5 / 401A
+
+🔬 PBL MINI / VS / S7 / 205 B
+
+🔬 SBL-V / MA / S8 / 402B"
+Thu,12:30-13:30,"📘 AI-AE
+PD
+CR 01",---
+Thu,13:30-14:30,"📘 MDS
+GD
+CR 01","📘 DBMS
+PPJ
+CR 02"
+Thu,14:40-15:40,"📘 MDS
+GD
+CR 01","📘 MDS
+VD
+CR 02"
+Thu,15:40-16:40,"📘 MDS
+GD
+CR 01",---
+Fri,09:00-10:00,---,---
+Fri,10:00-11:00,---,"🔬 SBL-V / PB / S5 / 402 B
+
+🔬 PBL MINI / VW / S6 / 402A
+
+🔬 DBMS LAB / PPJ / S7 / 401B"
+Fri,11:00-12:00,---,"🔬 SBL-V / PB / S5 / 402 B
+
+🔬 PBL MINI / VW / S6 / 402A
+
+🔬 DBMS LAB / PPJ / S7 / 401B"
+Fri,12:30-13:30,"📘 OS
+VS
+CR 01","📘 DBMS
+PPJ
+CR 02"
+Fri,13:30-14:30,"📘 OS
+VS
+CR 01","📘 OS
+MA
+CR 02"
+Fri,14:40-15:40,"🔬 SBL-V / PB / S2 / 402A
+
+🔬 PBL MINI / GW / S3 / 402 B
+
+🔬 DBMS LAB / SS / S4 / 401A","📘 OS
+MA
+CR 02"
+Fri,15:40-16:40,"🔬 SBL-V / PB / S2 / 402A
+
+🔬 PBL MINI / GW / S3 / 402 B
+
+🔬 DBMS LAB / SS / S4 / 401A",---
